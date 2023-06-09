@@ -9,7 +9,8 @@ namespace Data
     {
         public static void AddDataContext(this IServiceCollection services, IConfiguration config) {
             services.AddDbContext<DataContext>(options=>options.UseSqlite(config.GetConnectionString("DefaultConnection")));
-            services.AddScoped<IDataContext>(provider => provider.GetService<DataContext>());
+            services.AddScoped<DataContext>();
+            // services.AddScoped<IDataContext>(provider => provider.GetService<DataContext>()!);
         }
     }
 }
