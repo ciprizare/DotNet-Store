@@ -476,3 +476,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 Data/DotnetStore.db
+Data/DotnetStore.db-shm
+Data/DotnetStore.db-wal
