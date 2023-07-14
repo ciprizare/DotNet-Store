@@ -1,5 +1,7 @@
 using Data;
 using Application;
+using Microsoft.EntityFrameworkCore;
+using Data.DataSeed;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,5 +27,21 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+#region Database seeding and migration
+var scope = app.Services.CreateScope();
+var dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+try
+{
+    dataContext.Database.Migrate();
+    DbInitializer.Initialize(dataContext);
+}
+catch (Exception ex)
+{
+    
+    logger.LogError(ex, "A problem occured during migration!");
+}
+#endregion
 
 app.Run();
