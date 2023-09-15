@@ -1,3 +1,4 @@
+using System.Reflection;
 using Application.Repositories;
 using Application.Repositories.Interfaces;
 using Application.Services;
@@ -10,6 +11,9 @@ namespace Application
     {
         public static void AddApplication (this IServiceCollection services)
         {
+            // injecting mapping service
+            services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IProductRepository,ProductRepository>();
             services.AddScoped<IProductService,ProductService>();

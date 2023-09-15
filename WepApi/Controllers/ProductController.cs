@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Application.Models;
+using Application.Services;
 using Application.Services.Interfaces;
+using AutoMapper;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,81 +16,79 @@ namespace WepApi.Controllers
     public class ProductController : ControllerBase
     {
         private readonly IProductService _service;
-        public ProductController(IProductService service)
+        private readonly IMapper _mapper;
+
+        public ProductController(IProductService service, IMapper mapper)
         {
             _service = service;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllProducts()
         {
-            var products = await _service.GetAllProducts();
-            if (products == null || !products.Any()) 
+            var productsDTOs = await _service.GetAllProducts();
+            if (productsDTOs == null || !productsDTOs.Any()) 
             {
                 return NotFound();
             }
-            return Ok(products);
+
+            return Ok(productsDTOs);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetProductById(int id)
+        [HttpGet("{id}", Name = "GetProductById")]
+        public async Task<IActionResult> GetProductById([FromRoute] int id)
         {
-            var product = await _service.GetProduct(id);
-            if (product == null) 
+            var productDTO = await _service.GetProduct(id);
+            if (productDTO == null) 
             {
                 return NotFound();
             }
-            return Ok(product);
+            return Ok(productDTO);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddProduct(Product product)
+        public async Task<IActionResult> AddProduct(ProductDTO product)
         {
-            var newProduct = await _service.AddProduct(product);
-            if (!newProduct)
+            var isAdded = await _service.AddProduct(product);
+            if (!isAdded)
                 return BadRequest();
-            return Ok(product);
+                
+            return CreatedAtRoute("GetProductById", new { id = product.Id }, product);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProduct([FromRoute] int id, [FromBody] Product product)
-        {
-            var updatedProd = await _service.GetProduct(id);
-            if (updatedProd == null) 
-            {
-                return NotFound();
-            }
-
-            updatedProd.Name = product.Name;
-            updatedProd.Description = product.Description;
-            updatedProd.Price = product.Price;
-            updatedProd.PictureUrl = product.PictureUrl;
-            updatedProd.QuantityInStock = product.QuantityInStock;
-            updatedProd.Brand = product.Brand;
-            updatedProd.Type = product.Type;
-
-            var updateProduct = await _service.UpdateProduct(updatedProd);
+        public async Task<IActionResult> UpdateProduct([FromRoute] int id, [FromBody] UpsertProductDTO productDTO)
+        {            
+            var updateProduct = await _service.UpdateProduct(id, productDTO);
 
             if (!updateProduct)
                 return BadRequest();
 
-            return Ok(updatedProd);
+            return Ok(productDTO);
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchProduct([FromRoute] int id, [FromBody] PatchProductDTO productDTO)
+        {            
+            var patchProduct = await _service.PatchProduct(id, productDTO);
+
+            if (patchProduct == null)
+                return BadRequest();
+
+            return Ok(patchProduct);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> RemoveProduct(int id)
-        {
-            var product = await _service.GetProduct(id);
-            if (product == null)
-                return NotFound();
-            var removedProduct = await _service.RemoveProduct(product);
+        {            
+            var removedProduct = await _service.RemoveProduct(id);
 
             if (!removedProduct) 
                 return BadRequest();
 
             return Ok();
         }
-
     }
 
 }
